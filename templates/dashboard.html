@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard-MusicHub</title>
+    <link rel="stylesheet" href="static\dashboard.css">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap">
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <div class="sidebar">
+            <div class="user-info">
+                <h2>Welcome, {{ Username }}</h2>
+            </div>
+            <div class="navigation">
+                <ul>
+
+                    <li><a href="{{ url_for('profile', recommended_artist=recommendations[0]) }}">Profile</a></li>
+                    <li><a href="#">Connections</a></li>
+
+                </ul>
+            </div>
+        </div>
+        <div class="main-content">
+            <div class="header">
+                <div class="logout-btn">
+                    <a href="{{ url_for('logout') }}" style="text-decoration: none;">
+                        <button>Logout</button>
+                    </a>
+                </div>
+            </div>
+            
+            <div class="artist-cards">
+                <div class="artist-card">
+                    <h3>{{recommendations[0]}}</h3>
+                    <div class="action-buttons">
+                        <button>Connect</button>
+                        <a href="{{ url_for('profile', recommended_artist=recommendations[0]) }}"><button>View Profile</button></a>
+                    </div>
+                </div>
+
+                <div class="artist-card">
+                    <h3>{{recommendations[1]}}</h3>
+                    <div class="action-buttons">
+                        <button>Connect</button>
+                        <a href="{{ url_for('profile', recommended_artist=recommendations[1]) }}"><button>View Profile</button></a>
+                    </div>
+                </div>
+
+                <div class="artist-card">
+                    <h3>{{recommendations[2]}}</h3>
+                    <div class="action-buttons">
+                        <button>Connects</button>
+                        <a href="{{ url_for('profile', recommended_artist=recommendations[2]) }}"><button>View Profile</button></a>
+                    </div>
+                </div>
+
+                <div class="artist-card">
+                    <h3>{{recommendations[3]}}</h3>
+                    <div class="action-buttons">
+                        <button>Connect</button>
+                        <a href="{{ url_for('profile', recommended_artist=recommendations[3]) }}"><button>View Profile</button></a>
+                    </div>
+                </div>
+
+
+                <div class="artist-card">
+                    <h3>{{recommendations[4]}}</h3>
+                    <div class="action-buttons">
+                        <button>Connect</button>
+                        <a href="{{ url_for('profile', recommended_artist=recommendations[4]) }}"><button>View Profile</button></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

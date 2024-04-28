@@ -1,0 +1,123 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+
+body,
+html {
+    height: 100%;
+    font-family: 'Poppins', sans-serif;
+    background-color: #121212; 
+    color: #e0e0e0; 
+}
+
+.dashboard-container {
+    display: flex;
+    height: 100%;
+}
+
+.sidebar {
+    width: 20%;
+    background-color: #232323; 
+    color: #ffffff;
+    padding: 20px;
+}
+
+.user-info h2 {
+    font-size: 20px;
+    margin-bottom: 20px;
+}
+
+.navigation ul {
+    list-style-type: none;
+}
+
+.navigation ul li a {
+    color: #ffffff;
+    text-decoration: none;
+    display: block;
+    padding: 10px 0;
+}
+
+.navigation ul li a:hover {
+    background-color: #333333;
+}
+
+.main-content {
+    flex: 1;
+    padding: 20px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background-color: #1e1e1e; 
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.logout-btn button {
+    background-color: #076221bf;
+    color: #ffffff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.logout-btn button:hover {
+    background-color: #000000;
+}
+
+.artist-cards {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 50px;
+}
+
+.artist-card {
+    background-color: #333333; 
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2); 
+    padding: 30px;
+    color: #e0e0e0; 
+    width: 300px;
+}
+
+.artist-card img {
+    width: 100%;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+.artist-card h3 {
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+.artist-card .action-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+.artist-card .action-buttons button {
+    background-color: #076221bf;
+    color: #ffffff;
+    border: none;
+    padding: 5px 15px;
+    border-radius: 15px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.artist-card .action-buttons button:hover {
+    background-color: #000000;
+}
