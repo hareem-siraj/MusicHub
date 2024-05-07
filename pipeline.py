@@ -84,13 +84,13 @@ def pipeline():
     SET a.averageTrackDuration = averageTrackDuration;"""
     execute_query(query7)
 
-    # # Create graph projection
-    # projection_query = """
-    # CALL gds.graph.project(
-    # 'MyProj3',
-    # ['Artist', 'Track', 'Genre','Album'],
-    # ['CREATED', 'BELONGS_TO', 'INCLUDES'])"""
-    # execute_query(projection_query)
+    # Create graph projection
+    projection_query = """
+    CALL gds.graph.project(
+    'MyProj3',
+    ['Artist', 'Track', 'Genre','Album'],
+    ['CREATED', 'BELONGS_TO', 'INCLUDES'])"""
+    execute_query(projection_query)
 
     # Closeness Centrality
     query2 = """
