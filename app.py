@@ -69,7 +69,7 @@ def get_top_tracks_and_albums(username):
 def get_genre(username):
     query = """
     MATCH (u:Artist {Artist_Name: $username})-[:CREATED]->(t:Track)-[:BELONGS_TO]->(g:Genre)
-    RETURN g.Genre_Name AS GenreName
+    RETURN DISTINCT(g.Name) AS GenreName
     """
     result = execute_query(query, {"username": username})
     genre = [record["GenreName"] for record in result]
