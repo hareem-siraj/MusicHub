@@ -28,11 +28,11 @@ def execute_recommendation_pipeline():
     predict_query = """
     CALL gds.beta.pipeline.linkPrediction.predict.stream('myGraph4', {
     modelName: 'myModel',
-    topN: 1000
+    topN: 10000
     })
     YIELD node1, node2, probability
     WITH gds.util.asNode(node1).Artist_Name AS ArtistID, gds.util.asNode(node2).Artist_Name AS RecommendedArtistID, probability
-    WITH ArtistID, collect({RecommendedArtistID: RecommendedArtistID, probability: probability})[..50] AS recommendations
+    WITH ArtistID, collect({RecommendedArtistID: RecommendedArtistID, probability: probability})[..5] AS recommendations
     RETURN ArtistID, recommendations
     """
     answer = execute_query(predict_query)
@@ -65,6 +65,16 @@ def get_top_tracks_and_albums(username):
     top_tracks = [record["TrackName"] for record in result]
     
     return top_tracks
+
+def get_genre(username):
+    query = """
+    MATCH (u:Artist {Artist_Name: $username})-[:CREATED]->(t:Track)-[:BELONGS_TO]->(g:Genre)
+    RETURN g.Genre_Name AS GenreName
+    """
+    result = execute_query(query, {"username": username})
+    genre = [record["GenreName"] for record in result]
+    
+    return genre
 
 
 ################## ------------------------------------Flask Application------------------------------------ ##################
@@ -125,7 +135,9 @@ def profile(recommended_artist):
     # username = session.get('username')
     #username = "Naseebo Lal"
     tracks = get_top_tracks_and_albums(recommended_artist)
-    return render_template('profile.html', Username=userrn, recommended_artist=recommended_artist, tracks=tracks)
+    genre = get_genre(recommended_artist)
+    print("genre:", genre)
+    return render_template('profile.html', Username=userrn, recommended_artist=recommended_artist, tracks=tracks, genre=genre)
 
 # Route to handle back to dashboard
 @app.route('/back-to-dashboard')
