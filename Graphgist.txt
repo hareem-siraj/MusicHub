@@ -1,0 +1,136 @@
+= Music Hub- The Social Platform for Pakistani Musicians
+:author: Muhammad Aman
+:author: Hareem Siraj
+
+The data extraction phase of the MusicHub project involves retrieving relevant information from Spotify's API, which serves as a rich source of data on musicians, tracks, albums, genres, and related attributes. To accomplish this task, we utilized the Spotify for Developers API, which provides endpoints for accessing a wide range of music-related data. Here we'll look and explore how we used this data using a Neo4j database to provide a working socially connecting platform.
+
+
+== Data Model
+This data model below maps out a digital music library system. It structures information into distinct categories. "Artists" are defined by unique identifiers and names. "Tracks" have various attributes including a unique ID, name, popularity rating, duration, and even a preview URL for sampling. "Albums" are categorized by a unique ID, name, and release date. Genres are included to classify tracks by musical style, with a field for the genre name. The model further establishes connections between these categories. The "CREATED" relationship links artists to the tracks they create. The "BELONGS_TO" relationship associates tracks with their corresponding genres. Finally, the "INCLUDES" relationship ties albums to the tracks they contain, providing a structured way to organize musical pieces within an album.
+
+image::https://i.pinimg.com/originals/b8/f9/47/b8f947c7b9d60e949185ddfd3d1f33ad.png[Music Hub Data Model, scale=50%]
+
+== Data Loading
+
+Now here is how we loaded the extracted data into the Neo4j Graph database.
+
+[source,cypher]
+----
+LOAD CSV WITH HEADERS FROM "https://raw.githubusercontent.com/hareem-siraj/MusicHub/main/dataset/final.csv" AS row
+WITH row LIMIT 1000
+MERGE (artist:Artist {Artist_ID: row.Artist_ID})
+
+MERGE (track:Track {Track_ID: row.Track_ID})
+
+MERGE (genre:Genre {Name: row.Genre})
+
+MERGE (album:Album {Album_ID: row.Album_ID})
+
+SET artist.Artist_Name = row.Artist_Name, track.Track_Name = row.Track_Name, track.Popularity = toInteger(row.Popularity), track.Duration = toInteger(row.Duration), track.Preview_URL = row.Preview_URL, album.Album_Name = row.Album_Name, album.Release_Date = row.Release_Date
+
+MERGE (artist)-[:CREATED]->(track)
+
+MERGE (track)-[:BELONGS_TO]->(genre)
+
+MERGE (album)-[:INCLUDES]->(track);
+----
+
+Although, this dataset was cleaned efficiently removing obstacles, it still had one big problem: Supernodes. The below query efficiently removes the super nodes formed by genre node and breaks it into multiple several genre nodes to break the degree flow and increase efficiency.
+[source,cypher]
+----
+MATCH (g:Genre)<-[r:BELONGS_TO]-(t:Track) 
+WITH g, collect(t) AS tracks, collect(r) AS rels, count(r) AS countrels
+WHERE countrels > 100
+FOREACH(i IN range(0, countrels/50) |
+  MERGE (sub:Genre {Name: g.Name + '_' + (i * 50 + 1) + '-' + (i * 50 + 50)})
+  FOREACH(t IN tracks[(i * 50)..((i + 1) * 50)] |
+    MERGE (t)-[:BELONGS_TO]->(sub)
+    SET sub.tracks_count = coalesce(sub.tracks_count, 0) + 1
+  )
+  MERGE (sub)-[:Same_As]->(g)
+);
+
+MATCH (g1:Genre)<-[r1:BELONGS_TO]-(t2:Track)
+WHERE g1.tracks_count > 100
+remove g1.tracks_count
+DELETE r1
+----
+
+== Graph Insights
+
+Now with this dataset, we can explore and find out various insights from this dataset.
+
+== Most Popular Track
+
+[source,cypher]
+----
+MATCH (track:Track)
+RETURN track.Track_Name, track.Popularity
+ORDER BY track.Popularity DESC
+LIMIT 10;
+----
+
+The query retrives some of the most trending and popular Pakistani Songs such as "Sadqay" and "Pasoori" topping the charts with the highest popularity score.
+
+== Most Collaborative Artists
+[source,cypher]
+----
+MATCH (artist)-[:CREATED]->(track)<-[:CREATED]-(other_artist)
+WHERE artist <> other_artist
+RETURN artist.Artist_Name, COUNT(other_artist) AS collaborations
+ORDER BY collaborations DESC
+LIMIT 10;
+----
+
+Our next query explores to find most collaborative artists in the Pakistani Music Industry domain. Alizay Jaffer and Hamza Akram Qawwal standout as highly collaborative artists, suggesting they frequently collaborate with other artists on tracks.
+
+== Top Genres by Number of Tracks
+[source,cypher]
+----
+MATCH (sub:Genre)-[:Same_As]->(g:Genre)
+RETURN g.Name, SUM(sub.tracks_count) AS total_tracks
+ORDER BY total_tracks DESC
+LIMIT 5;
+----
+This query reveals the genres with the highest number of tracks associated with them. Genres like "Classical Pakistani Pop", "Pakistani Pop", and "Pakistani Indie" emerge as the most prevalent in the dataset, indicating their popularity among Pakistani musicians and listeners.
+
+== Machine Learning Pipeline
+Now, moving beyond static insights, we integrated machine learning pipelines to effectively leverage the database with our application. Using sophisticated algorithms, we can recommend artists based on their track genres, popularity, and various other factors. This integration enhances user experience by providing personalized recommendations tailored to individual preferences.
+
+[source,cypher]
+----
+CALL gds.beta.pipeline.linkPrediction.create('ppp');
+----
+This query creates a new machine learning pipeline named 'ppp' for our link prediction.
+
+[source,cypher]
+----
+CALL gds.beta.pipeline.linkPrediction.addNodeProperty('ppp', 'fastRP', {
+      mutateProperty: 'embedding',
+      contextNodeLabels: ['Artist'],
+      embeddingDimension: 256,
+      randomSeed: 42
+    })
+----
+Creates a 'fastRP' property for Artist nodes containing a 256-dimensional embedding, using random seed 42
+
+[source,cypher]
+----
+CALL gds.beta.pipeline.linkPrediction.addFeature('ppp', 'cosine', {
+      nodeProperties: ['embedding', 'closeness_centrality', 'AVGpopularity', 'averageTrackDuration', 'communityId', 'genrePreferences']
+    });
+----
+This query adds various features for link prediction using cosine similarity, including embedding, centrality, popularity, duration, community ID, and genre preferences
+[source,cypher]
+----
+CALL gds.beta.pipeline.linkPrediction.addRandomForest('ppp', {numberOfDecisionTrees: 10});
+----
+Adds a Random Forest model with 10 decision trees to the pipeline 'ppp'
+
+
+Like these, we trained a whole Neo4j machine learning model through this pipeline. This pipeline allows us to make personalized artist recommendations for users based on their listening history and various factors like track genres and popularity.
+
+== Ending Thoughts
+Building a social platform for Pakistani music like MusicHub involved various steps: data extraction, data modeling, data loading, analysis of graph properties, and finally, incorporating machine learning for personalized recommendations. By leveraging Neo4j's graph database capabilities, we were able to model the relationships between artists, tracks, genres, and albums. This rich data structure enabled us to extract valuable insights about the Pakistani music landscape and use those insights to create a more engaging user experience through recommendations.
+
+This is just a basic example, and the possibilities for using Neo4j and machine learning in MusicHub are vast. We can further refine our recommendations by incorporating additional user data such as demographics, preferences for specific instruments, or even mood-based listening habits. As the platform grows and gathers more user data, the recommendations can become even more personalized and relevant.
